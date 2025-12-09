@@ -1,90 +1,95 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "email" TEXT,
     "phone" TEXT,
     "name" TEXT NOT NULL,
     "unitNumber" TEXT,
     "role" TEXT NOT NULL DEFAULT 'RESIDENT',
     "password" TEXT,
-    "emailVerified" DATETIME,
+    "emailVerified" TIMESTAMP(3),
     "image" TEXT,
     "staffAtId" TEXT,
-    "lastTransactionAt" DATETIME,
+    "lastTransactionAt" TIMESTAMP(3),
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "deletedAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "User_staffAtId_fkey" FOREIGN KEY ("staffAtId") REFERENCES "Location" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Location" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "gracePeriodDays" INTEGER NOT NULL DEFAULT 0,
-    "priceDayOne" REAL NOT NULL DEFAULT 0,
-    "priceNextDay" REAL NOT NULL DEFAULT 0,
-    "priceFirstPackage" REAL NOT NULL DEFAULT 0,
-    "priceNextPackage" REAL NOT NULL DEFAULT 0,
-    "deliveryFee" REAL NOT NULL DEFAULT 0,
+    "priceDayOne" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceNextDay" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceFirstPackage" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceNextPackage" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "deliveryFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "managerId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Location_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Location_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Package" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "trackingNumber" TEXT,
     "courierName" TEXT,
     "photoUrl" TEXT,
     "status" TEXT NOT NULL DEFAULT 'RECEIVED',
-    "receivedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "pickedUpAt" DATETIME,
+    "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "pickedUpAt" TIMESTAMP(3),
     "locationId" TEXT NOT NULL,
     "recipientId" TEXT NOT NULL,
     "receivedById" TEXT,
-    "finalFee" REAL NOT NULL DEFAULT 0,
+    "finalFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "daysStored" INTEGER NOT NULL DEFAULT 0,
     "isPaid" BOOLEAN NOT NULL DEFAULT false,
     "paymentMethod" TEXT,
     "isDeliveryReq" BOOLEAN NOT NULL DEFAULT false,
     "deliveryNote" TEXT,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "deletedAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Package_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Package_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Package_receivedById_fkey" FOREIGN KEY ("receivedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Package_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "GoogleSheetsLog" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "packageId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "synced" BOOLEAN NOT NULL DEFAULT false,
-    "syncedAt" DATETIME,
+    "syncedAt" TIMESTAMP(3),
     "error" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "GoogleSheetsLog_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "AuditLog" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "targetId" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Account" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
@@ -96,23 +101,25 @@ CREATE TABLE "Account" (
     "scope" TEXT,
     "id_token" TEXT,
     "session_state" TEXT,
-    CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Session" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "expires" DATETIME NOT NULL,
-    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "expires" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "VerificationToken" (
     "identifier" TEXT NOT NULL,
     "token" TEXT NOT NULL,
-    "expires" DATETIME NOT NULL
+    "expires" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateIndex
@@ -171,3 +178,24 @@ CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_staffAtId_fkey" FOREIGN KEY ("staffAtId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Location" ADD CONSTRAINT "Location_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Package" ADD CONSTRAINT "Package_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Package" ADD CONSTRAINT "Package_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Package" ADD CONSTRAINT "Package_receivedById_fkey" FOREIGN KEY ("receivedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
