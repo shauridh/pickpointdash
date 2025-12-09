@@ -6,9 +6,9 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions)
 
@@ -67,9 +67,9 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions)
 
