@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite tidak support enum, gunakan String dengan constraint
+// Role: SUPER_ADMIN | LOCATION_MANAGER | STAFF | RESIDENT
+// PackageStatus: RECEIVED | NOTIFIED | CONFIRMED | DELIVERY_REQ | COMPLETED | RETURNED | ABANDONED
+// PaymentMethod: CASH | QRIS | VA | SUBSCRIPTION
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String?   @unique // Kunci utama notifikasi
+  name          String
+  unitNumber    String?   // Indexing untuk pencarian cepat
+  role          String    @default("RESIDENT") // SUPER_ADMIN | LOCATION_MANAGER | STAFF | RESIDENT
+  password      String?
+  
+  // NextAuth
+  emailVerified DateTime?
+  image         String?
+  
+  // Relasi
+  managedLocations Location[] @relation("Manager")
+  staffAt          Location?  @relation("Staff", fields: [staffAtId], references: [id])
+  staffAtId        String?
+  
+  packages         Package[]  @relation("Recipient")
+  inputtedPackages Package[]  @relation("ReceivedPackages") // Audit trail: Siapa staff yg input
+  
+  // NextAuth Relations
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Data Retention Tracking
+  lastTransactionAt DateTime? // Terakhir punya paket masuk/transaksi
+  isDeleted         Boolean   @default(false) // Soft delete flag
+  deletedAt         DateTime? // Timestamp saat soft delete
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([phone])
+  @@index([unitNumber])
+  @@index([lastTransactionAt])
+  @@index([isDeleted])
+}
+
+model Location {
+  id            String    @id @default(cuid())
+  name          String
+  code          String    @unique // Kode unik lokasi
+  address       String
+  
+  // --- PRICING CONFIGURATION ---
+  gracePeriodDays   Int      @default(0) // 0 = Charge immediately
+  
+  // Time-based Progressive
+  priceDayOne       Float    @default(0) // Harga hari pertama kena charge
+  priceNextDay      Float    @default(0) // Harga per hari berikutnya (Denda)
+  
+  // Qty-based Progressive
+  priceFirstPackage Float    @default(0) // Harga paket pertama bulan berjalan
+  priceNextPackage  Float    @default(0) // Harga paket kedua dst
+  
+  deliveryFee       Float    @default(0)
+  
+  // Relasi
+  managerId     String
+  manager       User      @relation("Manager", fields: [managerId], references: [id])
+  staffs        User[]    @relation("Staff")
+  packages      Package[]
+  
+  createdAt     DateTime  @default(now())
+}
+
+model Package {
+  id            String        @id @default(cuid())
+  trackingNumber String?      // Hasil scan barcode resi
+  courierName   String?       // JNE/Gojek/dll
+  photoUrl      String?       // Bukti foto
+  
+  status        String        @default("RECEIVED") // RECEIVED | NOTIFIED | CONFIRMED | DELIVERY_REQ | COMPLETED | RETURNED | ABANDONED
+  receivedAt    DateTime      @default(now())
+  pickedUpAt    DateTime?
+  
+  // Relasi Lokasi & User
+  locationId    String
+  location      Location      @relation(fields: [locationId], references: [id])
+  recipientId   String
+  recipient     User          @relation("Recipient", fields: [recipientId], references: [id])
+  
+  // Audit Trail (Staff yg input)
+  receivedById  String?
+  receivedBy    User?         @relation("ReceivedPackages", fields: [receivedById], references: [id])
+  
+  // Billing Snapshot (Disimpan saat checkout agar immutable)
+  finalFee      Float         @default(0)
+  daysStored    Int           @default(0)
+  isPaid        Boolean       @default(false)
+  paymentMethod String?       // CASH | QRIS | VA | SUBSCRIPTION
+  
+  // Add-ons
+  isDeliveryReq Boolean       @default(false)
+  deliveryNote  String?
+  
+  // Data Retention Tracking
+  isDeleted     Boolean       @default(false) // Soft delete flag
+  deletedAt     DateTime?     // Timestamp saat soft delete
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([receivedAt])
+  @@index([status])
+  @@index([locationId])
+  @@index([isDeleted])
+}
+
+model GoogleSheetsLog {
+  id        String   @id @default(cuid())
+  packageId String
+  action    String   // "CREATE", "UPDATE_STATUS", "PAYMENT"
+  synced    Boolean  @default(false)
+  syncedAt  DateTime?
+  error     String?
+  createdAt DateTime @default(now())
+  
+  @@index([synced])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "DELETE_USER", "DELETE_PACKAGE"
+  targetId  String   // User ID atau Package ID
+  reason    String   // "RETENTION_90_DAYS_NO_TRANSACTION"
+  createdAt DateTime @default(now())
+  
+  @@index([action])
+  @@index([createdAt])
+}
+
+// NextAuth.js Models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
