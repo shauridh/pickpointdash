@@ -6,11 +6,11 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// SQLite tidak support enum, gunakan String dengan constraint
+// PostgreSQL support enum, gunakan String dengan constraint
 // Role: SUPER_ADMIN | LOCATION_MANAGER | STAFF | RESIDENT
 // PackageStatus: RECEIVED | NOTIFIED | CONFIRMED | DELIVERY_REQ | COMPLETED | RETURNED | ABANDONED
 // PaymentMethod: CASH | QRIS | VA | SUBSCRIPTION
