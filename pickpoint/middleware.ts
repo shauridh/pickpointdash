@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server"
 export function middleware(request: NextRequest) {
   const { hostname } = request.nextUrl
   
-  // Route ke /portal untuk portal.pickpoint.my.id dan localhost:3001
+  // Route ke /portal untuk dev-portal.pickpoint.my.id dan localhost:3000
   const isPortal = 
-    hostname === "portal.pickpoint.my.id" ||
-    hostname === "portal.localhost:3000" ||
+    hostname === "dev-portal.pickpoint.my.id" ||
+    hostname === "localhost:3000" ||
     hostname.includes("localhost:3001")
 
   // Route ke /public untuk pickpoint.my.id dan localhost:3000
@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   if (isPublic && request.nextUrl.pathname.startsWith("/portal")) {
     // Redirect portal requests ke portal domain
     const url = new URL(request.url)
-    url.hostname = "portal.pickpoint.my.id"
+    url.hostname = "dev-portal.pickpoint.my.id"
     return NextResponse.redirect(url)
   }
 
