@@ -28,6 +28,8 @@ export function middleware(request: NextRequest) {
     // Redirect portal requests ke portal domain
     const url = new URL(request.url)
     url.hostname = "dev-portal.pickpoint.my.id"
+    url.protocol = "https:"
+    url.port = ""
     return NextResponse.redirect(url)
   }
 
