@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.id) {
-      router.push('/portal/dashboard')
+      router.push('/dashboard')
     }
   }, [status, session, router])
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
     setLoading(false)
 
     if (res?.ok) {
-      router.push("/portal/dashboard")
+      router.push("/dashboard")
     } else {
       setError(res?.error || "Login gagal")
     }
