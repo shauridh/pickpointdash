@@ -207,7 +207,6 @@ export default function DashboardPage() {
     </div>
   )
 }
-            + Input Paket
           </button>
         </div>
       </div>
