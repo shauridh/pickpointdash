@@ -16,8 +16,11 @@ export function middleware(request: NextRequest) {
     hostname.includes("localhost")
 
   if (isPortal) {
-    // Rewrite ke /portal
-    if (!request.nextUrl.pathname.startsWith("/portal")) {
+    // Rewrite ke /portal KECUALI untuk auth routes
+    const authRoutes = ['/login', '/api/auth']
+    const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+    
+    if (!request.nextUrl.pathname.startsWith("/portal") && !isAuthRoute) {
       return NextResponse.rewrite(
         new URL(`/portal${request.nextUrl.pathname}`, request.url)
       )
