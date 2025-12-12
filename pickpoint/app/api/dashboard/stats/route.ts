@@ -18,19 +18,20 @@ export async function GET() {
       prisma.package.count(),
     ])
 
-    // Calculate revenue bulan ini (simplified - bisa disesuaikan dengan logic bisnis)
+    // Calculate revenue bulan ini dari paket yang sudah paid
     const startOfMonth = new Date()
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
 
     const monthlyRevenue = await prisma.package.aggregate({
       where: {
-        createdAt: {
+        isPaid: true,
+        pickedUpAt: {
           gte: startOfMonth,
         },
       },
       _sum: {
-        price: true,
+        finalFee: true,
       },
     })
 
@@ -38,7 +39,7 @@ export async function GET() {
       totalUsers,
       totalLocations,
       totalPackages,
-      monthlyRevenue: monthlyRevenue._sum.price || 0,
+      monthlyRevenue: monthlyRevenue._sum.finalFee || 0,
     })
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
