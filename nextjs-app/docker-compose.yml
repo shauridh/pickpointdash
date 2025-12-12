@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pickpoint-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pickpoint
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pickpoint-network
+
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pickpoint-app
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/pickpoint"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "your-secret-key-change-in-production"
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - pickpoint-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+networks:
+  pickpoint-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

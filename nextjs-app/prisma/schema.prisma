@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= ENUMS =============
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PackageStatus {
+  ARRIVED
+  PICKED
+  DESTROYED
+}
+
+enum PackageSize {
+  S
+  M
+  L
+}
+
+enum ActivityType {
+  PACKAGE_ARRIVED
+  PACKAGE_PICKED
+  PACKAGE_DESTROYED
+  PAYMENT_RECEIVED
+  USER_CREATED
+  LOCATION_UPDATED
+}
+
+// ============= MODELS =============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(STAFF)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Location {
+  id                  String   @id @default(cuid())
+  name                String
+  code                String   @unique
+  address             String
+  phone               String?
+  pricing             Json     // PricingSchema
+  enableDelivery      Boolean  @default(false)
+  deliveryFee         Float    @default(0)
+  enableMembership    Boolean  @default(false)
+  membershipFee       Float    @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  packages  Package[]
+  payments  Payment[]
+}
+
+model Package {
+  id            String        @id @default(cuid())
+  trackingCode  String        @unique
+  locationId    String
+  location      Location      @relation(fields: [locationId], references: [id])
+  senderName    String
+  senderPhone   String
+  receiverName  String
+  receiverPhone String
+  status        PackageStatus @default(ARRIVED)
+  size          PackageSize
+  weight        Float?
+  description   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  payments  Payment[]
+  activities Activity[]
+}
+
+model Payment {
+  id         String   @id @default(cuid())
+  packageId  String?
+  package    Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  amount     Float
+  method     String   // "CASH", "TRANSFER", "QRIS", etc
+  status     String   @default("PENDING") // "PENDING", "COMPLETED", "FAILED"
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  packageId   String
+  package     Package      @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  type        ActivityType
+  description String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

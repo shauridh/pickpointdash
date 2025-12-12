@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Builds
+.next/
+out/
+dist/
+build/
+
+# Env
+.env
+.env.local
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Prisma
+prisma/*.db
+
+# Local tooling
+.idx/
+
+# Ignore Vite reference clone (local only)
+pickpoint/
+
+# Docker
+*.pem
