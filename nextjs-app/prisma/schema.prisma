@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============= ENUMS =============
@@ -51,30 +50,50 @@ model User {
 model Location {
   id                  String   @id @default(cuid())
   name                String
-  code                String   @unique
-  address             String
-  phone               String?
+  code                String?   @unique
+  address             String?   @default("")
+  phone               String?   @default("")
   pricing             Json     // PricingSchema
   enableDelivery      Boolean  @default(false)
   deliveryFee         Float    @default(0)
   enableMembership    Boolean  @default(false)
   membershipFee       Float    @default(0)
+  gracePeriod         Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   packages  Package[]
   payments  Payment[]
+  customers Customer[]
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  name             String
+  phoneNumber      String
+  unitNumber       String
+  locationId       String?
+  location         Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  isMember         Boolean   @default(false)
+  membershipExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  packages Package[]
 }
 
 model Package {
   id            String        @id @default(cuid())
   trackingCode  String        @unique
-  locationId    String
-  location      Location      @relation(fields: [locationId], references: [id])
+  locationId    String?
+  location      Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   senderName    String
   senderPhone   String
   receiverName  String
   receiverPhone String
+  photo         String?
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
   status        PackageStatus @default(ARRIVED)
   size          PackageSize
   weight        Float?
@@ -90,10 +109,10 @@ model Payment {
   id         String   @id @default(cuid())
   packageId  String?
   package    Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
-  locationId String
-  location   Location @relation(fields: [locationId], references: [id])
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
   amount     Float
-  method     String   // "CASH", "TRANSFER", "QRIS", etc
+  method     String   // "CASH", "TRANSFER", "QRIS", dll
   status     String   @default("PENDING") // "PENDING", "COMPLETED", "FAILED"
   notes      String?
   createdAt  DateTime @default(now())

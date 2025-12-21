@@ -6,19 +6,36 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.16.0",
+    "@zxing/library": "^0.20.0",
+    "bcryptjs": "^3.0.3",
     "html5-qrcode": "^2.3.8",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.561.0",
     "next": "16.0.10",
     "next-auth": "^4.24.13",
+    "pg": "^8.16.3",
     "prisma": "^7.1.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-hot-toast": "^2.6.0",
+    "react-qr-barcode-scanner": "^2.1.20",
     "react-webcam": "^7.2.0",
     "recharts": "^3.5.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "swr": "^2.3.8",
+    "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -30,6 +47,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
